@@ -1,42 +1,47 @@
-# Blend — a color-mixing logic puzzle
+# Blend
 
-*Minesweeper meets Queens, but the clues are paint colors.*
+**A color-mixing logic puzzle.** Minesweeper meets Queens, but the clues are paint colors.
 
-## Rules
+### ▶ [Play it in your browser](https://jumf2222.github.io/blend/)
 
-The board is an N×N grid (5×5 to start).
+Free, no sign-up, works on phones and desktops. A new daily puzzle every day.
 
-1. **Place paint drops.** Every row and every column contains exactly one 🔴 Red, one 🟡 Yellow and one 🔵 Blue drop. All other cells are empty (on 5×5, two empty cells per row/column).
-2. **Clue cells are always empty.** Each clue shows the color you get by mixing the drops orthogonally adjacent to it (up/down/left/right).
-3. **Clues show which colors are present, not how many.** Two reds next to a clue still mix to plain Red.
+![A 6×6 Blend puzzle in progress, with color clues, placed drops and a hint explaining the next move](docs/screenshot.png)
 
-### Clue key
+## How to play
 
-| Clue | Code | Neighbors include… |
-|---|---|---|
-| Red / Yellow / Blue | R / Y / B | only that color |
-| Orange | O | Red + Yellow, no Blue |
-| Green | G | Yellow + Blue, no Red |
-| Purple | P | Red + Blue, no Yellow |
-| Brown | K | all three |
-| White | W | no drops at all |
+Fill the grid with paint drops so that:
 
-Each clue does two jobs: it says which colors must be nearby, and it **rules out** every other color from all of its neighbors.
+1. **Every row and every column has exactly one 🔴 Red, one 🟡 Yellow and one 🔵 Blue drop.** All other cells are empty.
+2. **Clue cells are always empty.** Each clue shows the color you get by mixing the drops directly up, down, left and right of it.
+3. **Clues show which colors are there, not how many.** Two Reds next to a clue still mix to plain Red.
 
-## Sample puzzle #1 (3 clues, unique, solvable without guessing)
+| Clue | Its neighbors contain… |
+|---|---|
+| 🟥 Red, 🟨 Yellow, 🟦 Blue | only that color |
+| 🟧 Orange | Red and Yellow, no Blue |
+| 🟩 Green | Yellow and Blue, no Red |
+| 🟪 Purple | Red and Blue, no Yellow |
+| 🟫 Brown | all three colors |
+| ⬜ White | no drops at all |
+
+Every clue does two jobs: it tells you which colors must be nearby, and it **rules out** every other color from all of its neighbors.
+
+### Example
 
 ```
-     c1 c2 c3 c4 c5
-r1    ·  ·  ·  ·  O
-r2    R  ·  ·  ·  ·
-r3    ·  G  ·  ·  ·
-r4    ·  ·  ·  ·  ·
-r5    ·  ·  ·  ·  ·
+     1  2  3  4  5
+1    ·  ·  ·  ·  O
+2    R  ·  ·  ·  ·
+3    ·  G  ·  ·  ·
+4    ·  ·  ·  ·  ·
+5    ·  ·  ·  ·  ·
 ```
 
-Opening move: r2c2 neighbors the R clue (so no Y/B) and the G clue (so no R), so it must be empty.
+A good first move: the cell in row 2, column 2 touches the **R** clue (so it can't be Yellow or Blue) and the **G** clue (so it can't be Red). It must be empty.
 
-Solution:
+<details>
+<summary>Show the solution</summary>
 
 ```
 R B · Y ·
@@ -46,56 +51,68 @@ B Y R · ·
 Y R · · B
 ```
 
-## Implementation plan (playable web version)
+</details>
 
-### Core gameplay
-- Tap a cell to cycle: empty → Red → Yellow → Blue → marked-empty (×) → empty. Support right-click / long-press to mark empty directly.
-- Clue cells render as a filled circle of the blended color **plus a letter/shape** (colorblind support: ● R, ▲ Y, ■ B).
-- Live validation: highlight a row/column with a duplicate color or too many drops; highlight a clue whose neighbors are already in conflict with it.
-- Win detection, timer, undo/redo, "check" and "hint" buttons.
+### Controls
 
-### Puzzle generation (see `prototype/blend.py` and `prototype/gen.py` for the Python prototype)
-1. Pick a random valid solution: each row is an ordered choice of 3 distinct columns for (R, Y, B), with each column used once per color.
-2. Compute the clue for every empty cell.
-3. Shuffle the clue cells and remove them one at a time, keeping a removal only if the puzzle is still **solvable by the logic propagator** (that keeps it human-friendly without guessing). Brute-force-check uniqueness at the end.
-4. Difficulty: control the number of clues left and which deduction rules the propagator may use.
+- **Tap** a cell to cycle: blank → Red → Yellow → Blue → × (marked empty).
+- **Long-press** (touch) or **right-click** to mark a cell empty.
+- Or pick a color in the toolbar and tap to place it directly.
+- **Keyboard:** arrow keys to move, `R` `Y` `B` (or `1` `2` `3`) to place, `X` to mark empty, `Backspace` to clear, `Ctrl+Z` / `Ctrl+Y` to undo/redo, `H` for a hint.
 
-### Logic propagator (human-style rules)
-Each cell has candidates `{empty, R, Y, B}`. Repeat until nothing changes:
-- A clue cell is empty, and it removes from all its neighbors every color the clue doesn't contain.
-- Row/column: once a color is placed, remove it from the rest of that line. If a color has only one possible cell in a line, place it there.
-- Row/column: if N−3 cells are already empty, the rest are drops. If only N−3 cells could be empty, they are empty.
-- A clue color with only one neighbor that could hold it is placed there.
-- Any cell with no candidates left means a contradiction.
+## Features
 
-### Stretch goals
-- Daily puzzle from a date-based seed, getting harder through the week (5×5 Mon → 7×7 Sun).
-- Bigger grids (6×6, 7×7) and difficulty tiers.
-- Variants: "bold" clues that also show how many drops touch the cell, or diagonal neighbors counting toward the mix.
-- Shareable results grid (emoji) and streak tracking.
-- Two-player mode where players take turns revealing clues.
+- **Every puzzle has exactly one solution and never needs guessing.** Each one is checked to be solvable by logic alone.
+- **Hints that teach.** A hint doesn't just reveal a cell. It explains *why*, step by step.
+- **Live mistake highlighting** for repeated colors in a row or column, and for clues that no longer fit.
+- **Daily puzzle** that gets harder through the week, from 5×5 on Monday to 7×7 on Sunday, with a streak counter.
+- **Three sizes (5×5, 6×6, 7×7) and three difficulties.**
+- **Shareable links and results.** The address of each puzzle opens that exact puzzle (for example [`#6m-2024`](https://jumf2222.github.io/blend/#6m-2024)), and you can copy an emoji summary when you finish.
+- **Colorblind-friendly:** drops differ by shape (● Red, ▲ Yellow, ■ Blue) and clues show a letter.
+- **Light and dark mode**, and your progress is saved in your browser.
 
-## Running the web version
+## How the puzzles are made
 
-Built with SolidJS 2.0 + Vite. Requires Node 22.12+.
+1. Pick a random valid solution.
+2. Put a clue on every empty cell.
+3. Remove clues one at a time, keeping a removal only if the puzzle can still be solved by a set of human-style deduction rules. Then an exhaustive search confirms there's exactly one solution.
+4. Harder puzzles keep fewer clues. Easier ones get a few of the removed clues back.
 
-Live at https://jumf2222.github.io/blend/ (deployed by `.github/workflows/pages.yml` on every push to `main`).
+The deduction rules are the same ones the hints use:
+
+- A clue removes every color it doesn't contain from all of its neighbors.
+- Once a color is placed in a row or column, no other cell in that line can have it. If a color fits in only one cell of a line, it goes there.
+- Each line has exactly *N* − 3 empty cells, so once those are known the rest hold drops (and the other way around).
+- If only one neighbor of a clue can hold one of the clue's colors, that color goes there.
+
+## Development
+
+Built with [SolidJS 2](https://www.solidjs.com/) and [Vite](https://vite.dev/). Requires Node.js 22.12 or newer.
 
 ```sh
 npm install
-npm run dev      # http://localhost:5173
-npm test         # engine + UI tests (vitest, jsdom)
-npm run build    # type-check and build to dist/
+npm run dev      # start a local server at http://localhost:5173
+npm test         # run the puzzle-engine and UI tests
+npm run build    # type-check and build the site into dist/
 ```
 
-The URL hash is the puzzle id (`#5m-12345` = 5×5, medium, seed 12345), so links are shareable. `#daily` opens today's puzzle. Progress, daily results and streaks are saved in the browser's localStorage.
+Every push to `main` is tested, built and deployed to GitHub Pages by [`.github/workflows/pages.yml`](.github/workflows/pages.yml).
 
-## Files
-- `src/engine/`: framework-free TypeScript port of the prototype: generator, logic propagator (with human-readable reasons for hints), exhaustive uniqueness solver, board validation.
-- `src/game.ts`: game state (Solid store): marks, undo/redo, timer, check/hint, persistence.
-- `src/components/`: board, toolbar, panels and win dialog.
-- `prototype/blend.py`: enumerates every valid 5×5 solution and reduces clues greedily (uniqueness only).
-- `prototype/gen.py`: generator that keeps puzzles solvable with the logic propagator. Run `cd prototype && python gen.py <seed>`.
+### Project layout
+
+| Path | What's there |
+|---|---|
+| `src/engine/` | The puzzle engine (no UI code): generator, deduction rules with hint explanations, solution checker, mistake detection |
+| `src/game.ts` | Game state: moves, undo/redo, timer, hints, saving progress |
+| `src/components/` | The board, toolbar, side panels and win screen |
+| `prototype/` | The original Python prototype of the generator (`python gen.py <seed>`) |
+
+### Ideas for later
+
+- Variant rules: "bold" clues that also count how many drops touch them, or diagonal neighbors that count toward the mix.
+- A two-player mode where players take turns revealing clues.
+
+Contributions and puzzle-design ideas are welcome. Feel free to open an issue or pull request.
 
 ## License
 
