@@ -75,6 +75,28 @@ Each cell has candidates `{empty, R, Y, B}`. Repeat until nothing changes:
 - Shareable results grid (emoji) and streak tracking.
 - Two-player mode where players take turns revealing clues.
 
+## Running the web version
+
+Built with SolidJS 2.0 + Vite. Requires Node 22.12+.
+
+Live at https://jumf2222.github.io/blend/ (deployed by `.github/workflows/pages.yml` on every push to `main`).
+
+```sh
+npm install
+npm run dev      # http://localhost:5173
+npm test         # engine + UI tests (vitest, jsdom)
+npm run build    # type-check and build to dist/
+```
+
+The URL hash is the puzzle id (`#5m-12345` = 5×5, medium, seed 12345), so links are shareable. `#daily` opens today's puzzle. Progress, daily results and streaks are saved in the browser's localStorage.
+
 ## Files
+- `src/engine/`: framework-free TypeScript port of the prototype: generator, logic propagator (with human-readable reasons for hints), exhaustive uniqueness solver, board validation.
+- `src/game.ts`: game state (Solid store): marks, undo/redo, timer, check/hint, persistence.
+- `src/components/`: board, toolbar, panels and win dialog.
 - `prototype/blend.py`: enumerates every valid 5×5 solution and reduces clues greedily (uniqueness only).
 - `prototype/gen.py`: generator that keeps puzzles solvable with the logic propagator. Run `cd prototype && python gen.py <seed>`.
+
+## License
+
+[MIT](LICENSE)
